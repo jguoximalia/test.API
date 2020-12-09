@@ -1,6 +1,14 @@
 trigger:
 - '*'
-
+variables:
+- name: BuildParameters.mavenPOMFile
+  value: pom.xml
+name: $(date:yyyyMMdd)$(rev:.r)
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: main
 stages:
 - stage: 'Build'
   displayName: 'Build the web application'
