@@ -53,6 +53,6 @@ stages:
             inputs:
               azureSubscription: 'Azure_Development_Support_Plan'
               appType: functionApp
-              appName: 'test.API-1607507627491'
+              appName: 'test-api-7794'
               resourceGroupName: 'java-functions-group'
-              package: $(System.DefaultWorkingDirectory)/_Ximalia.API.functions-Maven-CI/drop/target/azure-functions/ximalia-api-functions
+              package: $(System.DefaultWorkingDirectory)/**/*.zip
