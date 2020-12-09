@@ -1,0 +1,58 @@
+trigger:
+- '*'
+
+stages:
+- stage: 'Build'
+  displayName: 'Build the web application'
+  jobs:
+  - job: 'Build'
+    displayName: 'Build Java Azure functions'
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+    - checkout: self
+    - task: Maven@3
+      displayName: Maven pom.xml
+      inputs:
+        mavenPOMFile: $(BuildParameters.mavenPOMFile)
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      condition: succeededOrFailed()
+      inputs:
+        SourceFolder: $(system.defaultworkingdirectory)
+        Contents: '**/*.jar'
+        TargetFolder: $(build.artifactstagingdirectory)
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      condition: succeededOrFailed()
+      inputs:
+        PathtoPublish: $(build.artifactstagingdirectory)
+
+- stage: 'Deploy'
+  displayName: 'Deploy the web application'
+  jobs:
+  - deployment: Deploy
+    displayName: "Deploy RM Azure Functons"
+    environment: 'Dev'
+    pool:
+      vmImage: 'VS2017-Win2016'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download the build artifacts'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.DefaultWorkingDirectory)'
+
+          - task: AzureFunctionApp@1
+            displayName: Release package to Azure Funcion App
+            inputs:
+              azureSubscription: 'Azure_Development_Support_Plan'
+              appType: functionApp
+              appName: 'test.API-1607507627491'
+              resourceGroupName: 'java-functions-group'
+              package: $(System.DefaultWorkingDirectory)/_Ximalia.API.functions-Maven-CI/drop/target/azure-functions/ximalia-api-functions
